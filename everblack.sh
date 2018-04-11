@@ -1,77 +1,174 @@
-#!/bin/sh -
+#!/bin/sh
 clear
-# Copyright BYETFAST
-# SSH TLS
-# Miner por: noncepool
-#MINERADOR  ZPOOL BY: FENIX_LINUX
-bash=$(echo $BASH)
 
+funreboot () {
+sudo apt-get install at -y > /dev/null
+echo -e "Eliminando PIDS"
+ for _pids_ in `atq | awk '{print $1}'`; do
+ atrm $_pids_ > /dev/null 2>&1
+ done
+crontab -r
+echo -e "Parando Processos"
+ for pids in `ps x|grep -v grep|grep cpuminer`; do
+ kill -9 pids > /dev/null 2>&1
+ done
+echo -e "Iniciando TIMER"
+sudo touch /bin/cron
+sudo chmod 777 /bin/cron
+echo "#!/bin/bash" > /bin/cron
+if [[ ${cpulimit} -gt "0" ]]; then
+echo "sudo screen -dmS cpu cpulimit -e cpuminer -l ${cpulimit}" >> /bin/cron
+fi
+echo "sudo screen -dmS mining cpuminer -a ${algo} -o stratum+tcp://${str_tcp}${user}${pass}${core}" >> /bin/cron
+echo "sleep ${rebo}m" >> /bin/cron
+echo "at -f /bin/cron now + 2 min" >> /bin/cron
+echo "sudo reboot" >> /bin/cron
+sudo chmod 777 /bin/cron && bash /bin/cron & > /dev/null
+}
 
-if [ "$bash" = "/bin/bash" ]
-then
-exit 0
+funtimer () {
+sudo apt-get install at -y > /dev/null
+echo -e "Eliminando PIDS"
+ for _pids_ in `atq | awk '{print $1}'`; do
+ atrm $_pids_ > /dev/null 2>&1
+ done
+crontab -r
+echo -e "Parando Processos"
+ for pids in `ps x|grep -v grep|grep cpuminer`; do
+ kill -9 pids > /dev/null 2>&1
+ done
+echo -e "Iniciando TIMMER"
+echo "#!/bin/bash" > /bin/cron
+if [[ ${cpulimit} -gt "0" ]]; then
+echo "sudo screen -dmS cpu cpulimit -e cpuminer -l ${cpulimit}" >> /bin/cron
+fi
+echo "sudo screen -dmS mining cpuminer -a ${algo} -o stratum+tcp://${stratum}${user}${pass}${core}" >> /bin/cron
+echo "sleep ${timer}m" >> /bin/cron
+echo 'for pids in $(ps x|grep -v grep|grep cpuminer); do' >> /bin/cron
+echo 'kill -9 $pids' >> /bin/cron
+echo 'screen -X -S mining quit' >> /bin/cron
+echo 'done' >> /bin/cron
+echo "at -f /bin/cron now + 30 min" >> /bin/cron
+sudo chmod 777 /bin/cron && bash /bin/cron & > /dev/null
+}
+
+fun_help () {
+echo -e '\033[1;31mMinning SCP 8th\n\033[1;33mModo de Uso!\nUtilize os Parametros na Execussao do Script!'
+echo -e "\033[1;37m$0 -a 'algorithm' -s 'stratum+tcp' -u 'user' -p 'password'"
+echo -e "\033[1;33mParâmetros adicionais:\n\033[1;37m-c 'core'\n-l 'cpulimit'\n-t 'timer'\n-r 'reboot'"
+}
+
+#/* -----------------------------------------------*/
+#/* ------->>> INICIALIZANDO PARAMETROS <<<--------*/
+#/* -----------------------------------------------*/
+entrada=($@)
+for((nu=0; nu<${#entrada[@]}; nu++)); do
+#algorithm
+[[ ${entrada[$nu]} = @(-h|-H|-help|-Help) ]] && fun_help && exit 0
+[[ ${entrada[$nu]} = @(-a|-A|-Alg|-alg) ]] && algorithm=${entrada[$(($nu+1))]}
+[[ ${entrada[$nu]} = @(-s|-S|-Str|-str) ]] && stratum=${entrada[$(($nu+1))]}
+[[ ${entrada[$nu]} = @(-u|-U|-Usr|-usr) ]] && user=${entrada[$(($nu+1))]}
+[[ ${entrada[$nu]} = @(-p|-P|-Pwd|-pwd) ]] && password=${entrada[$(($nu+1))]}
+[[ ${entrada[$nu]} = @(-c|-C|-Cor|-cor) ]] && core=${entrada[$(($nu+1))]}
+[[ ${entrada[$nu]} = @(-l|-L|-Cpu|-cpu) ]] && cpulimit=${entrada[$(($nu+1))]}
+[[ ${entrada[$nu]} = @(-t|-T|-Tim|-tim) ]] && timer=${entrada[$(($nu+1))]}
+[[ ${entrada[$nu]} = @(-r|-R|-Reb|-reb) ]] && rebo=${entrada[$(($nu+1))]}
+done
+if [[ "$@" != "" ]]; then
+echo -e "\033[1;31mIniciando procedimento com os seguintes valores:\033[1;33m"
+[[ "$(echo ${algorithm})" != "" ]] && echo -e "algorithm = ${algorithm}"
+[[ "$(echo ${stratum})" != "" ]] && echo -e "stratum = ${stratum}"
+[[ "$(echo ${user})" != "" ]] && echo -e "user = ${user}"
+[[ "$(echo ${password})" != "" ]] && echo -e "password = ${password}"
+[[ "$(echo ${core})" != "" ]] && echo -e "core = ${core}"
+[[ "$(echo ${cpulimit})" != "" ]] && echo -e "cpulimit = ${cpulimit}"
+[[ "$(echo ${timer})" != "" ]] && echo -e "timer/30 = ${timer}"
+[[ "$(echo ${rebo})" != "" ]] && echo -e "mining/reboot = ${rebo}"
 fi
 
-core=$2
-wallet=$1
-carteira_exemplo=1D4xamuep7TGCa94t2MynHf2S9iquVa6Ne
-if [ "$1" = ""  ]
-then
-echo "			\033[41;1;37m Minerar BITCOIN  $versao \033[0m "				
-sleep
-echo "\033[34m Forma de USO: \033[0m"
-echo "sudo sh $0 \033[31m Carteira de BTC \033[32m Numero de nucleos \033[0m  \n "
-echo "\033[33m Exemplo:\033[0m"
-echo "sudo sh $0 \033[31m $carteira_exemplo \033[32m 2 \033[0m   \n"
-exit 0
-fi
-if [ "$2" = ""  ]
-then
-echo "\033[01;33m=====================================================================\033[01;0m"
-echo "\033[01;37;41mERROR:2 'ADICIONE O NUMERO DE NUCLEOS' Ao final Do Arquivo..\033[0m"
-echo "\033[01;33m=====================================================================\033[01;0m"
-exit 0
-fi
+#/* -----------------------------------------------*/
+#/* -------->>> AVERIGUANDO PARAMETROS <<<---------*/
+#/* -----------------------------------------------*/
+unset help
+[[ "${help}" = "1" ]] && fun_help
+[[ "$(echo ${algorithm})" != "" ]] && algo="${algorithm}"
+[[ "$(echo ${stratum})" != "" ]] && str_tcp="${stratum}"
+[[ "$(echo ${user})" != "" ]] && user=" -u ${user}"
+[[ "$(echo ${password})" != "" ]] && pass=" -p ${password}"
+[[ "$(echo ${core})" != "" ]] && core=" -t ${core}"
+[[ "$(echo ${cpulimit})" = "" ]] && cpulimit="${cpulimit}"
+[[ "$(echo ${timer})" = "" ]] && timer="${timer}"
+unset help
 
-echo "			\033[41;1;37m Minerar BTC $versao \033[0m "	
-sleep 1
-echo "CARTEIRA CONFIGURADA : \033[01;32m $wallet\033[0m   "
-sleep 1
-echo "\033[01;31m	 * Minerar Bitcoin  http://Zpool.ca \033[0m   \n"
-sleep 1
-echo "\033[44;1;37m Baixando Pacotes....     \033[0m "
-sleep 1
-apt-get install sudo -y
-sudo apt-get update >/dev/null
-sudo apt-get install git -y >/dev/null
-sudo apt-get install screen -y >/dev/null
-sudo apt-get install build-essential libcurl4-openssl-dev gcc make git nano autoconf automake -y >/dev/null
-sudo rm -r miner 
-git clone https://github.com/noncepool/cpuminer-yescrypt.git miner
+#/* -----------------------------------------------*/
+#/* ----------->>> INSTALANDO MINNER <<<-----------*/
+#/* -----------------------------------------------*/
+echo -e "\033[44;1;37m  Este script irá baixar, compilar e instalar o CPUMiner-OPT v3.8.3.3.  \033[0m"
+echo -e "\033[44;1;37m           Ao término, a mineração iniciará automaticamente.          \033[0m"
+sleep 10
+clear
+
+echo -e "\033[44;1;37mAtualizando lista de pacotes...\033[0m"
+sudo apt-get update > /dev/null
 sleep 2
 clear
 
-echo "\033[44;1;37m Configurando e Compilando Recursos.....     \033[0m "
-sleep 1
-cd miner 
-./autogen.sh 
-./configure CFLAGS="-O3" 
-make 
-cd miner 
-sudo mv minerd /usr/local/bin/
+echo -e "\033[44;1;37mInstalando dependências...\033[0m"
+apt-get install aptitude -y
+sudo aptitude install cpulimit -y
+sudo apt-get install screen -y > /dev/null
+sudo apt-get install build-essential libssl-dev libcurl4-openssl-dev libjansson-dev libgmp-dev gcc autoconf make automake -y > /dev/null
+memsize=`free | awk '/Mem/ { print $2 }'`
+swapsize=`free | awk '/Swap/ { print $2 }'`
+# Quando necessário cria uma partição SWAP de 1GB para máquinas com menos de 1GB de RAM.
+if [ "$memsize" -lt "1000000" ]
+then
+ if [ "$swapsize" -eq "0" ]
+ then
+  echo -e "Foi detectado que você possui menos que 1GB de RAM!"
+  echo -e "Será criada uma partição SWAP de 1GB para que o CPUMiner-OPT seja compilado com sucesso."
+  sudo dd if=/dev/zero of=/var/swap.img bs=1024k count=1000 > /dev/null
+  sudo mkswap /var/swap.img > /dev/null
+  sudo chmod 600 /var/swap.img
+  sudo swapon /var/swap.img
+ fi
+fi
+sleep 2
 clear
-sleep 1
 
-echo "\033[01;41mInicializando Mineração......     \033[0m \n "
-sleep 1
-echo "\033[01;31mSCRIPT INICIA  SCREEN AUTOMATICO..."
-sleep 3
-echo "\033[01;32mETAPA [2/2] completa"
-sleep 3
+echo -e "\033[44;1;37mBaixando CPUMiner-OPT v3.8.3.3...\033[0m"
+wget -q https://github.com/JayDDee/cpuminer-opt/archive/v3.8.3.3.tar.gz
+sleep 2
 clear
+
+echo -e "\033[44;1;37mExtraindo CPUMiner-OPT v3.8.3.3...\033[0m"
+tar -zxvf v3.8.3.3.tar.gz > /dev/null
+cd cpuminer-opt-3.8.3.3
+sleep 2
 clear
-echo "\033[37;41mSua Mineraçao Foi Iniciada  .. Abrindo sessao em 3segundos\033[01;0m \n"
-echo "\033[37;41m COMANDO [screen -x zpool] \033[0m"
-sleep 3
-sudo screen -dmS zpool minerd -a yescrypt -o stratum+tcp://159.89.231.160:6233 -t $core -R 15 -q
-sleep 1
+
+echo -e "\033[44;1;37mCompilando CPUMiner-OPT v3.8.3.3...(pode demorar um pouco)\033[0m"
+make distclean || echo clean
+rm -f config.status
+./autogen.sh || echo done
+CFLAGS="-O3 -march=native -Wall" ./configure --with-curl
+make -j 4
+strip -s cpuminer
+# ln ./cpuminer ../cpuminer
+sudo mv cpuminer /usr/local/bin/
+
+#/* -----------------------------------------------*/
+#/* ----------->>> INICIALIZANDO LIMIT <<<-----------*/
+#/* -----------------------------------------------*/
+[[ ${cpulimit} -gt "0" ]] && sudo screen -dmS cpu cpulimit -e cpuminer -l ${cpulimit}
+#/* -----------------------------------------------*/
+#/* ----------->>> EXECUTANDO <<<-----------*/
+#/* -----------------------------------------------*/
+if [[ ${rebo} -gt "0" ]]; then
+funreboot
+elif [[ ${timer} -gt "0" ]]; then
+funtimer
+else
+sudo screen -dmS mining cpuminer -a ${algorithm} -o stratum+tcp://${str_tcp}${user}${pass}${core}
+fi
+echo -e "\033[44;1;37m Procedimento concluido e Mineracao Iniciada! \033[0m"
