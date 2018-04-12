@@ -136,18 +136,18 @@ fi
 sleep 2
 clear
 
-echo -e "\033[44;1;37mBaixando CPUMiner-OPT v3.8.3.3...\033[0m"
-wget -q https://github.com/JayDDee/cpuminer-opt/archive/v3.8.3.3.tar.gz
+echo -e "\033[44;1;37mBaixando CPUMiner-OPT v3.8.7.2...\033[0m"
+wget -q https://github.com/JayDDee/cpuminer-opt/archive/v3.8.7.2.tar.gz
 sleep 2
 clear
 
-echo -e "\033[44;1;37mExtraindo CPUMiner-OPT v3.8.3.3...\033[0m"
-tar -zxvf v3.8.3.3.tar.gz > /dev/null
-cd cpuminer-opt-3.8.3.3
+echo -e "\033[44;1;37mExtraindo CPUMiner-OPT v3.8.7.2...\033[0m"
+tar -zxvf v3.8.7.2.tar.gz > /dev/null
+cd cpuminer-opt-3.8.7.2
 sleep 2
 clear
 
-echo -e "\033[44;1;37mCompilando CPUMiner-OPT v3.8.3.3...(pode demorar um pouco)\033[0m"
+echo -e "\033[44;1;37mCompilando CPUMiner-OPT v3.8.7.2...(pode demorar um pouco)\033[0m"
 make distclean || echo clean
 rm -f config.status
 ./autogen.sh || echo done
